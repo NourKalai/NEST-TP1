@@ -8,28 +8,28 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { randomUUID, RandomUUIDOptions } from 'crypto';
-import { brotliDecompressSync } from 'zlib';
+
 import { TodoCreate } from '../dto/todo-create.dto';
 import { TodoUpdate } from '../dto/todo-update.dto';
 import { TodoModel } from '../todo-model';
+import { TodoModuleService } from '../todo-module.service';
 
-@Controller('todo-controller')
+@Controller('todo')
 export class TodoControllerController {
+
+  constructor(private readonly todoService: TodoModuleService) { }
+
   private todos: TodoModel[] = [];
   @Get()
   getTodtodos() {
-    return this.todos;
+    return this.todoService.getAll();
   }
 
   @Post()
-  addTodo(@Body() newTodo: TodoCreate): TodoModel {
-    const { name, description, status } = newTodo;
-    const id = randomUUID();
-    const createdAt = new Date();
-    const todo = new TodoModel(id, name, description, status, createdAt);
-    this.todos.push(todo);
-    return todo;
+  addTodo(@Body() newTodo: TodoCreate): Promise<TodoModel> {
+
+    return this.todoService.addTodo(newTodo);
+
   }
   @Get(':id')
   getTodoById(@Param('id') id): TodoModel {
@@ -54,14 +54,8 @@ export class TodoControllerController {
     }
   }
   @Put(':id')
-  updateTodoById(@Param('id') id, @Body() newTodo: TodoUpdate): TodoModel {
-    const todo = this.getTodoById(id);
-    todo.description = newTodo.description
-      ? newTodo.description
-      : todo.description;
-    todo.name = newTodo.name ? newTodo.name : todo.name;
-
-    console.log(todo);
-    return todo;
+  updateTodoById(@Param('id') id, @Body() newTodo: TodoUpdate):Promise< TodoModel> {
+   
+   return this.todoService.update(id,newTodo);
   }
 }
